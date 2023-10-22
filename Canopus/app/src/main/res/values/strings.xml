@@ -1,0 +1,38 @@
+<resources>
+    <string name="app_name">Canopus</string>
+    <string name="loading">Loading...</string>
+    <string name="login">Login</string>
+    <string name="signup">SignUp</string>
+    <string name="signupLbl">Create an account!</string>
+    <string name="loginLbl">I have an account!</string>
+    <string name="username">Username</string>
+    <string name="email">Email</string>
+    <string name="password">Password</string>
+    <string name="create_star">Create new star</string>
+    <string name="join_star">Join star</string>
+    <string name="invite">Your invites</string>
+    <string name="star_name">Star Name</string>
+    <string name="star_pswd">Star Password</string>
+    <string name="help">HELP SECTION</string>
+    <string name="gobackIV">Back button</string>
+    <string name="entermessage">Type a message</string>
+    <string name="logoutBtn">Logout</string>
+
+
+
+    <string name="question1">Q1: Unable to register with my email?</string>
+    <string name="answer1">A1: Reasons-\n1. Email is already in use\n2. Email is not valid\n\nFix-\n1. Make sure your email is valid, and try using casual domains like- google.com</string>
+
+    <string name="question2">Q2: Unable to use the username I want to?</string>
+    <string name="answer2">A2: Reasons-\n1. Username is already in use\n2. Username is not valid\n\nFix-\n1. Avoid using special characters like: (!, @, #, $) etc,.</string>
+
+    <string name="faqs">FAQs</string>
+
+
+    <string name="LTU">Learn to Use!</string>
+    <string name="HTU">1. SignUp/Create an account if you don\'t have one.\n2. Login with your email and password.\n3. To contact/communicate with your friends you can either make your star or join their. You can also invite them in yours.\n4. You can chat with them 24/7.\n\nNOTE: The Database could be exploited and the chats could be read by someone as they are not encrypted. Ultimately your password would be safe (NOT GUARANTEED).</string>
+
+    <string name="update">Check For Update</string>
+
+
+</resources>
