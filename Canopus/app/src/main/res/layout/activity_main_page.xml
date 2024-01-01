@@ -8,75 +8,80 @@
     tools:context=".MainPage">
 
     <TextView
-        android:id="@+id/title_act4"
+        android:id="@+id/lblTitle4"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="24dp"
-        android:fontFamily="@font/rb"
+        android:fontFamily="@font/roboto_black"
         android:text="@string/app_name"
-        android:textColor="#FFFFFF"
+        android:textColor="@color/white"
         android:textSize="50sp"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <LinearLayout
-        android:id="@+id/linearLayout"
+        android:id="@+id/llOptions"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginLeft="20dp"
         android:layout_marginRight="20dp"
         android:layout_marginBottom="20dp"
+        android:padding="0dp"
         android:gravity="center"
         android:orientation="horizontal"
+        android:background="@drawable/linear_layout_bg_round_3"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent">
 
         <ImageView
-            android:id="@+id/createStar"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
+            android:id="@+id/ivCreateStar"
+            android:layout_margin="8dp"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
             android:layout_weight="1"
-            android:contentDescription="@string/create_star"
-            app:srcCompat="@drawable/create_star" />
+            android:contentDescription="@string/create_a_new_star"
+            android:src="@drawable/create_star" />
 
         <ImageView
-            android:id="@+id/invites"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
+            android:id="@+id/ivInvitation"
+            android:layout_margin="8dp"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
             android:layout_weight="1"
-            android:contentDescription="@string/invite"
-            app:srcCompat="@drawable/invite_star" />
+            android:contentDescription="@string/send_invitation"
+            android:src="@drawable/invite_star" />
+
 
         <ImageView
-            android:id="@+id/joinStar"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
+            android:id="@+id/ivJoinStar"
+            android:layout_margin="8dp"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
             android:layout_weight="1"
-            android:contentDescription="@string/join_star"
-            app:srcCompat="@drawable/join_star" />
+            android:contentDescription="@string/join_a_star"
+            android:src="@drawable/join_star" />
     </LinearLayout>
 
     <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recentStarView"
+        android:id="@+id/rvStarsJoined"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_marginTop="12dp"
         android:layout_marginBottom="12dp"
-        app:layout_constraintBottom_toTopOf="@+id/linearLayout"
+        app:layout_constraintBottom_toTopOf="@+id/llOptions"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/title_act4" />
+        app:layout_constraintTop_toBottomOf="@+id/lblTitle4" />
 
 
     <ImageView
-        android:id="@+id/help_4"
-        android:layout_width="20dp"
-        android:layout_height="20dp"
-        android:layout_marginTop="20dp"
-        android:layout_marginEnd="20dp"
-        android:layout_marginRight="20dp"
+        android:id="@+id/ivHelp3"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_marginTop="12dp"
+        android:layout_marginEnd="12dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:srcCompat="@drawable/help_icon" />

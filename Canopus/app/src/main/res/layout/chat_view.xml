@@ -3,68 +3,60 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:padding="14dp">
+    android:padding="12dp">
 
     <LinearLayout
         android:visibility="visible"
-        android:id="@+id/pLinearLayoutRight"
+        android:id="@+id/llRight"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@drawable/linear_layout_bg_round"
+        android:background="@drawable/linear_layout_bg_round_right"
         android:orientation="vertical"
-        android:layout_marginLeft="56dp"
-        android:layout_marginStart="56dp"
+        android:layout_marginStart="64dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
         <TextView
-            android:id="@+id/userRight"
+            android:id="@+id/lblUserRight"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="start"
-            android:layout_marginLeft="12dp"
+            android:layout_marginStart="12dp"
             android:layout_marginTop="12dp"
             android:textSize="12sp"
             android:textStyle="italic"
-            android:textColor="@color/purple200"
-            android:text="Suhail Hasan"
-            android:layout_marginStart="12dp" />
+            android:textColor="#005EFF"/>
 
         <TextView
-            android:id="@+id/msgOfUserRight"
+            android:id="@+id/lblMessageRight"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="start"
-            android:layout_marginLeft="12dp"
             android:layout_marginStart="12dp"
-            android:layout_marginTop="6dp"
-            android:layout_marginRight="6dp"
+            android:layout_marginTop="2dp"
             android:layout_marginEnd="6dp"
             android:textColor="#FFFFFF"
-            android:textSize="16sp"
-            android:text="Hey my name is Suhail"
+            android:textSize="18sp"
             android:textStyle="bold"/>
 
         <TextView
-            android:id="@+id/timeOfMsgRight"
+            android:id="@+id/lblTimeRight"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="end"
             android:layout_margin="6dp"
             android:textColor="@color/whiteLight"
             android:textSize="14sp"
-            android:text="13287382"
             android:textStyle="bold" />
     </LinearLayout>
 
     <LinearLayout
         android:visibility="visible"
-        android:id="@+id/pLinearLayoutLeft"
+        android:id="@+id/llLeft"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginRight="56dp"
-        android:layout_marginEnd="56dp"
+        android:layout_marginEnd="64dp"
         android:background="@drawable/linear_layout_bg_round_left"
         android:orientation="vertical"
         app:layout_constraintEnd_toEndOf="parent"
@@ -72,42 +64,37 @@
         app:layout_constraintTop_toTopOf="parent">
 
         <TextView
-            android:id="@+id/userLeft"
+            android:id="@+id/lblUserLeft"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="start"
-            android:layout_marginLeft="12dp"
+            android:layout_marginStart="12dp"
             android:layout_marginTop="12dp"
             android:textSize="12sp"
             android:textStyle="italic"
-            android:textColor="#000000"
-            android:text="Suhail Hasan"
-            android:layout_marginStart="12dp" />
+            android:textColor="#FF0000"/>
 
         <TextView
-            android:id="@+id/msgOfUserLeft"
+            android:id="@+id/lblMessageLeft"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="start"
-            android:layout_marginLeft="12dp"
             android:layout_marginStart="12dp"
-            android:layout_marginTop="6dp"
-            android:layout_marginRight="6dp"
+            android:layout_marginTop="2dp"
             android:layout_marginEnd="6dp"
             android:textColor="#FFFFFF"
-            android:textSize="16sp"
-            android:text="Hey my name is Suhail"
+            android:textSize="18sp"
             android:textStyle="bold"/>
 
         <TextView
-            android:id="@+id/timeOfMsgLeft"
+            android:id="@+id/lblTimeLeft"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="end"
             android:layout_margin="6dp"
             android:textColor="@color/whiteLight"
             android:textSize="14sp"
-            android:text="13287382"
             android:textStyle="bold" />
     </LinearLayout>
+
 </androidx.constraintlayout.widget.ConstraintLayout>
