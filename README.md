@@ -16,6 +16,5 @@ Instead of using the term 'Group', I used a rather different word, 'STAR'. You c
 Features I would want to add:
 - [ ] Invitation System
 - [ ] Personal chatting
-- [ ] Change the background
 
 Click [Download Application](https://drive.google.com/file/d/1mBHLM-XQHEAOvylyZmNKHr3wigwq3qGU/view?usp=sharing) to download the Application (For Android)
