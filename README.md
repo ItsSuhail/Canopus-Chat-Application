@@ -9,6 +9,7 @@ Features included:
 + Group based Chatting
 + A ting sound when sending or receiving a text
 + Can check for updates
++ Notifications to others when a message is sent
 
 ## Uniqueness:
 Instead of using the term 'Group', I used a rather different word, 'STAR'. You can create your own star and invite your friends to your star and chat!
