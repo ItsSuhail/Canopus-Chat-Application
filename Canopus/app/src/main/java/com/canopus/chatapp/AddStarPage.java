@@ -29,12 +29,14 @@ public class AddStarPage extends AppCompatActivity {
     ImageView helpIv;
 
     FirebaseDatabase starDb;
-    DatabaseReference starRef, starMembersRef, starChatsRef;
+//    DatabaseReference starRef, starMembersRef, starChatsRef;
+
+    DatabaseReference starRef;
 
     ValueEventListener starRefL;
     FBase fBase;
 
-    String starName, starPassword, cUsername; // For getting starname and pswd
+    String starName, starPassword, cUsername, cEmail; // For getting starname and pswd
     String addStarSharedPreference; // For adding value of star created
     String starMembers; // For adding member in star db
     String curStarsJoined; //For getting current stars joined
@@ -52,6 +54,7 @@ public class AddStarPage extends AppCompatActivity {
             public void handleOnBackPressed() {
                 if(createStarBtn.isEnabled()) {
                     doCheck = false;
+
                     if (starRefL != null) {
                         starRef.removeEventListener(starRefL);
                     }
@@ -87,8 +90,8 @@ public class AddStarPage extends AppCompatActivity {
         // Initialising FirebaseDB;
         starDb = FirebaseDatabase.getInstance();
         starRef = starDb.getReference("star");
-        starMembersRef = starDb.getReference("starMembers");
-        starChatsRef = starDb.getReference("starChats");
+//        starMembersRef = starDb.getReference("starMembers");
+//        starChatsRef = starDb.getReference("starChats");
 
         // Initializing SharedPreference
         SharedPreferences sharedPreferences = getSharedPreferences(NAME, MODE_PRIVATE);
@@ -97,9 +100,10 @@ public class AddStarPage extends AppCompatActivity {
 
         // Getting intent
         Intent cIntent = getIntent();
-        if(cIntent.hasExtra("com.canopus.app.username")){
+        if(cIntent.hasExtra("com.canopus.app.username") && cIntent.hasExtra("com.canopus.app.encodedEmail")){
             Log.d(TAG, "Username fetched!");
             cUsername = cIntent.getStringExtra("com.canopus.app.username");
+            cEmail = cIntent.getStringExtra("com.canopus.app.encodedEmail");
         }
         else{
             Log.d(TAG, "Error fetching username through the intent.");
@@ -119,11 +123,10 @@ public class AddStarPage extends AppCompatActivity {
             hideKeyboard(AddStarPage.this);
             createStarBtn.setEnabled(false);
             helpIv.setEnabled(false);
-            doCheck = true;
 
             Log.d(TAG, "Pressed on create star button");
 
-            // Fetching starname and pswd
+            // Fetching starname and password
             starName = starNameCreateEdt.getText().toString();
             starPassword = starPasswordEdt.getText().toString();
 
@@ -133,11 +136,14 @@ public class AddStarPage extends AppCompatActivity {
                 // Checking if star name is available
                 Log.d(TAG, "Star name is valid");
                 Log.d(TAG, "Checking if star available");
+
+                doCheck = true;
                 starRefL = starRef.child(starName).addValueEventListener(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot snapshot) {
                         if(doCheck) {
                             doCheck = false;
+
                             // Is star exists
                             if (snapshot.exists()) {
                                 Log.d(TAG, "Star not available.");
@@ -147,22 +153,25 @@ public class AddStarPage extends AppCompatActivity {
                             // If star doesn't exists
                             else{
                                 // Adding star into DB
-                                Log.d(TAG, "Adding star into db");
-                                starRef.child(starName).setValue(starPassword);
-
-                                // Adding user as star member
-                                Log.d(TAG, "Adding user as a star member");
+                                Log.d(TAG, "Creating STAR, Adding star details into database");
                                 starMembers = cUsername + "<<|||>>";
-                                starMembersRef.child(starName).setValue(starMembers);
-
-                                // Adding chats info
-                                starChatsRef.child(starName).setValue("Canopus<|>Feel free to chat whatever you want!" +
+                                String starChats = "Canopus<|>Feel free to chat whatever you want!" +
                                         " Make sure not to share your personal credentials, like IP-Addresses, Passwords, etc." +
                                         "<|>" +
                                         FirebaseStringCorrection.getCurTime() +
-                                        "<<|||>>");
+                                        "<<|||>>";
 
-                                // Adding star to recent stars list
+                                StarModel starModel = new StarModel(starName, starPassword, starMembers, starChats, cUsername, cEmail+"<<|||>>");
+                                starRef.child(starName).setValue(starModel);
+
+//                                // Adding user as star member
+//                                Log.d(TAG, "Adding user as a star member");
+//                                starMembersRef.child(starName).setValue(starMembers);
+//
+//                                // Adding chats info
+//                                starChatsRef.child(starName).setValue();
+
+                                // Adding star to stars joined list
                                 addStarSharedPreference = curStarsJoined + starName + "<|>" + starPassword + "<<|||>>";
                                 Log.d(TAG, "Adding star to joined stars shared preference");
                                 Log.d(TAG, addStarSharedPreference);
@@ -183,6 +192,11 @@ public class AddStarPage extends AppCompatActivity {
 
                     @Override
                     public void onCancelled(@NonNull DatabaseError error) {
+                        // Removing star listener
+                        if(starRefL!=null) {
+                            starRef.removeEventListener(starRefL);
+                        }
+
                         Log.d(TAG, "Error occurred while checking if star was available: "+error.getDetails());
                         Toast.makeText(getApplicationContext(), "Some error occurred! Try again.", Toast.LENGTH_SHORT).show();
                         doCheck = false;
@@ -195,6 +209,7 @@ public class AddStarPage extends AppCompatActivity {
                     }
                 });
 
+                // Removing star listener
                 starRef.removeEventListener(starRefL);
             }
             else{

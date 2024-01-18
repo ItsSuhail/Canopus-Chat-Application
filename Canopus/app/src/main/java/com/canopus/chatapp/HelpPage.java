@@ -8,6 +8,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.net.Uri;
@@ -38,6 +39,7 @@ public class HelpPage extends AppCompatActivity {
 
     Button logoutBtn, checkUpdateBtn;
     String TAG = "com.canopus.tag";
+    String NAME = "com.canopus.chatapp.information";
 
     Context mContext;
 
@@ -81,6 +83,12 @@ public class HelpPage extends AppCompatActivity {
                         startActivity(goBack);
                         break;
                     }
+
+                    case "MainActivity":
+                        Intent goBack = new Intent(getApplicationContext(), MainActivity.class);
+                        goBack.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                        startActivity(goBack);
+                        break;
                 }
                 finish();
             }
@@ -122,6 +130,12 @@ public class HelpPage extends AppCompatActivity {
                             // Signing out
                             mAuth.signOut();
 
+                            SharedPreferences sharedPreferences = getSharedPreferences(NAME, MODE_PRIVATE);
+                            SharedPreferences.Editor editor = sharedPreferences.edit();
+
+                            editor.remove("StarsJoined");
+                            editor.apply();
+
                             Toast.makeText(getApplicationContext(), "Successfully logged out from your account.", Toast.LENGTH_SHORT).show();
                             // Head to login page
                             Intent LoginPage = new Intent(getApplicationContext(), LoginPage.class);
@@ -158,8 +172,6 @@ public class HelpPage extends AppCompatActivity {
         checkUpdateBtn.setEnabled(false);
         logoutBtn.setEnabled(false);
 
-        getUpdateUrl = true;
-        checkUpdate = true;
         // Getting application version
         int version;
         try {
@@ -167,26 +179,30 @@ public class HelpPage extends AppCompatActivity {
             version = pInfo.versionCode;
         } catch (PackageManager.NameNotFoundException e) {
             e.printStackTrace();
-            version = 3;
+            version = 5;
         }
 
         int finalVersion = version;
+
+
+        getUpdateUrl = true;
+        checkUpdate = true;
         DbRefL = DbRef.child("latestVersion").addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if(checkUpdate){
+                    checkUpdate = false;
                     if(snapshot.exists()){
                         if(Integer.parseInt(snapshot.getValue().toString()) == finalVersion){
-                            Toast.makeText(HelpPage.this, "No update found yet! You are using the latest version!", Toast.LENGTH_SHORT).show();
-                            checkUpdate = false;
                             getUpdateUrl = false;
+
+                            Toast.makeText(HelpPage.this, "No update found yet! You are using the latest version!", Toast.LENGTH_SHORT).show();
                         }
                         else{
                             UpdateLinkRefL = UpdateLinkRef.child("latestVersionLink").addValueEventListener(new ValueEventListener() {
                                 @Override
                                 public void onDataChange(@NonNull DataSnapshot snapshot) {
                                     if(getUpdateUrl){
-                                        checkUpdate = false;
                                         getUpdateUrl = false;
 
                                         if(snapshot.exists()){
@@ -207,7 +223,6 @@ public class HelpPage extends AppCompatActivity {
                                     Log.d(TAG, "Some error occurred while getting new update link: "+error.getDetails());
                                     Toast.makeText(HelpPage.this, "Some error occurred while fetching the latest update link. Try again.", Toast.LENGTH_LONG).show();
 
-                                    checkUpdate = false;
                                     getUpdateUrl = false;
                                 }
                             });
@@ -215,7 +230,6 @@ public class HelpPage extends AppCompatActivity {
                     }
 
                     else{
-                        checkUpdate = false;
                         getUpdateUrl = false;
 
                         Log.d(TAG, "No latest version is found");

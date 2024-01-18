@@ -33,6 +33,7 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.messaging.FirebaseMessaging;
 
 public class SignUpPage extends AppCompatActivity {
 
@@ -43,16 +44,16 @@ public class SignUpPage extends AppCompatActivity {
     ProgressBar signupPb;
 
     String username, email, password;
-    boolean doCheck = false;
     String TAG = "com.canopus.tag";
+    boolean checkUserAvailability = false;
 
 
     FirebaseAuth mAuth;
     FirebaseDatabase loginDb;
-    DatabaseReference emailCheckRef, usersRef, usernameAvailableRef;
+    DatabaseReference usersRef, usernameAvailableRef;
     FBase fBase;
 
-    ValueEventListener emailCheckRefL, usersRefL, usernameAvailableRefL;
+    ValueEventListener usersRefL, usernameAvailableRefL;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,7 +77,7 @@ public class SignUpPage extends AppCompatActivity {
             @Override
             public void handleOnBackPressed() {
                 if(loginLbl.isEnabled()) {
-                    doCheck = false;
+                    checkUserAvailability = false;
                     if (usernameAvailableRefL != null) {
                         usernameAvailableRef.removeEventListener(usernameAvailableRefL);
                     }
@@ -111,11 +112,8 @@ public class SignUpPage extends AppCompatActivity {
         // Initializing FBDb, FBAuth and FBASE
         mAuth = FirebaseAuth.getInstance();
         loginDb = FirebaseDatabase.getInstance();
-        emailCheckRef = loginDb.getReference("emailcheck");
         usersRef = loginDb.getReference("users");
         usernameAvailableRef = loginDb.getReference("usernameAvailable");
-
-        fBase = new FBase(getApplicationContext(), emailCheckRef, usersRef);
 
 
         // When pressed on Signup button
@@ -151,7 +149,7 @@ public class SignUpPage extends AppCompatActivity {
                     // Checking if username is valid
                     if(FirebaseStringCorrection.IsValidName(username)) {
                         // Checking if username is available to use
-                        Log.d(TAG, "Creating account");
+                        Log.d(TAG, "Trying to creating account");
 
                         // Enabling progress bar
                         showSignupPb();
@@ -186,30 +184,53 @@ public class SignUpPage extends AppCompatActivity {
 
         // When pressed on Login lbl
         loginLbl.setOnClickListener(v -> {
+            checkUserAvailability = false;
+
             // Heading to Login Page
             Intent LoginPage = new Intent(getApplicationContext(), LoginPage.class);
             LoginPage.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(LoginPage);
-            doCheck = false;
             finish();
         });
 
         // When pressed on Help
         helpIv.setOnClickListener(v -> {
+            checkUserAvailability = false;
+
+            // Heading to help page
             Intent HelpPage = new Intent(getApplicationContext(), com.canopus.chatapp.HelpPage.class);
             HelpPage.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_ACTIVITY_CLEAR_TASK);
             HelpPage.putExtra("com.canopus.app.parentActivity", "SignUpPage");
-            doCheck = false;
             startActivity(HelpPage);
             finish();
         });
 
     }
     public void addNewUser(String username, String email, String UID){
-        email = FirebaseStringCorrection.Encode(email);
-        usernameAvailableRef.child(username).setValue("true");
-        emailCheckRef.child(email).setValue(UID);
-        usersRef.child(email).setValue(username);
+
+        String encodedEmail = FirebaseStringCorrection.Encode(email);
+        FirebaseMessaging.getInstance().getToken().addOnCompleteListener(task -> {
+            if(task.isSuccessful()){
+                usernameAvailableRef.child(username).setValue("true");
+                Log.d(TAG, "got FCM Token");
+                String FCMToken = task.getResult();
+
+                UserModel userModel = new UserModel(username, encodedEmail, UID, FCMToken);
+                usersRef.child(encodedEmail).setValue(userModel);
+            }
+            else{
+                checkUserAvailability = false;
+                if(usernameAvailableRefL!=null) {
+                    usernameAvailableRef.removeEventListener(usernameAvailableRefL);
+                }
+
+                Log.d(TAG, "Unable to get FCM Token");
+                Toast.makeText(this, "Some error occurred. Please try again.", Toast.LENGTH_SHORT).show();
+                mAuth.signOut();
+            }
+        });
+
+//        emailCheckRef.child(email).setValue(UID);
     }
 
     public boolean isValidEmail(CharSequence target) {
@@ -217,73 +238,65 @@ public class SignUpPage extends AppCompatActivity {
     }
 
     public void createAccount(){
-        doCheck = true;
-        // Encoding email for FBDB
+        checkUserAvailability = true;
+
+        // Encoding email for Firebase DB
         email = FirebaseStringCorrection.Encode(email);
 
         // Checking if username exists
         usernameAvailableRefL = usernameAvailableRef.child(username).addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                if (doCheck) {
-                    doCheck = false;
-
+                if (checkUserAvailability) {
+                    checkUserAvailability = false;
                     if (!snapshot.exists()) {
-
                         // Decoding the email
                         email = FirebaseStringCorrection.Decode(email);
 
                         // Creating account
-                        mAuth.createUserWithEmailAndPassword(email, password).addOnCompleteListener(new OnCompleteListener<AuthResult>() {
-                            @Override
-                            public void onComplete(@NonNull Task<AuthResult> task) {
-                                if (task.isSuccessful()) {
-                                    Log.d(TAG, "Registration succeeded!");
+                        mAuth.createUserWithEmailAndPassword(email, password).addOnCompleteListener(task -> {
+                            if (task.isSuccessful()) {
+                                Log.d(TAG, "Registration succeeded!");
 
-                                    Toast.makeText(getApplicationContext(), "Registration succeeded!", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(getApplicationContext(), "Registration succeeded!", Toast.LENGTH_SHORT).show();
 
-                                    Log.d(TAG, "Adding username to Firebase");
+                                Log.d(TAG, "Adding username to Firebase");
 
-                                    // Getting current user and adding to firebase database
-                                    FirebaseUser cUser = mAuth.getCurrentUser();
-                                    String cUID = cUser.getUid();
-                                    addNewUser(username, email, cUID);
+                                // Getting current user and adding to firebase database
+                                FirebaseUser cUser = mAuth.getCurrentUser();
+                                String cUID = cUser.getUid();
+                                addNewUser(username, email, cUID);
 
-                                    // Signing out and heading to login activity
-                                    mAuth.signOut();
+                                // Signing out and heading to login activity
+                                mAuth.signOut();
 
-                                    Intent LoginPage = new Intent(getApplicationContext(), LoginPage.class);
-                                    LoginPage.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                                    startActivity(LoginPage);
+                                Intent LoginPage = new Intent(getApplicationContext(), LoginPage.class);
+                                LoginPage.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                                startActivity(LoginPage);
 
-                                    finish();
-                                }
-
-                                // If task is not successful
-                                else {
-                                    Log.d(TAG, "Registration failed, Authentication error: " + String.valueOf(task.getException()));
-
-                                    if(task.getException() != null){
-                                        try{
-                                            throw task.getException();
-                                        }
-                                        catch(FirebaseAuthWeakPasswordException e){
-                                            Toast.makeText(SignUpPage.this, "Your password is weak.", Toast.LENGTH_SHORT).show();
-                                        }
-                                        catch(FirebaseAuthUserCollisionException e){
-                                            Toast.makeText(SignUpPage.this, "Email is already in use!", Toast.LENGTH_SHORT).show();
-                                        }
-                                        catch(Exception e){
-                                            Toast.makeText(SignUpPage.this, "Authentication Failed! Please check your network.", Toast.LENGTH_LONG).show();
-                                        }
-                                    }
-                                    else{
-                                        Toast.makeText(SignUpPage.this, "Authentication Failed!", Toast.LENGTH_SHORT).show();
-                                    }
-                                }
-                                hideSignupPb();
-
+                                finish();
                             }
+
+                            // If task is not successful
+                            else {
+                                Log.d(TAG, "Registration failed, Authentication error: " + String.valueOf(task.getException()));
+
+                                if (task.getException() != null) {
+                                    try {
+                                        throw task.getException();
+                                    } catch (FirebaseAuthWeakPasswordException e) {
+                                        Toast.makeText(SignUpPage.this, "Your password is weak.", Toast.LENGTH_SHORT).show();
+                                    } catch (FirebaseAuthUserCollisionException e) {
+                                        Toast.makeText(SignUpPage.this, "Email is already in use!", Toast.LENGTH_SHORT).show();
+                                    } catch (Exception e) {
+                                        Toast.makeText(SignUpPage.this, "Authentication Failed! Please check your network.", Toast.LENGTH_LONG).show();
+                                    }
+                                } else {
+                                    Toast.makeText(SignUpPage.this, "Authentication Failed!", Toast.LENGTH_SHORT).show();
+                                }
+                            }
+                            hideSignupPb();
+
                         });
                     }
 
@@ -296,20 +309,23 @@ public class SignUpPage extends AppCompatActivity {
 
                     }
 
-                    if(usernameAvailableRefL!=null){
-                        usernameAvailableRef.removeEventListener(usernameAvailableRefL);
-                    }
                 }
             }
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
                 hideSignupPb();
-                doCheck = false;
                 Log.d(TAG, String.valueOf(error.getDetails()));
                 Toast.makeText(getApplicationContext(), "Some error occurred while we tried to create your account. Try again", Toast.LENGTH_LONG).show();
+
+                removeListener();
+
             }
         });
+
+        // Remove listener
+        usernameAvailableRef.removeEventListener(usernameAvailableRefL);
+        Log.d(TAG, "Removed on valueEventListener");
 
     }
 
@@ -331,4 +347,11 @@ public class SignUpPage extends AppCompatActivity {
         signupPb.setVisibility(View.GONE);
     }
 
+    public void removeListener(){
+        // Removing event listener
+        if(usernameAvailableRefL!=null){
+            usernameAvailableRef.removeEventListener(usernameAvailableRefL);
+            Log.d(TAG, "Removed on valueEventListener");
+        }
+    }
 }

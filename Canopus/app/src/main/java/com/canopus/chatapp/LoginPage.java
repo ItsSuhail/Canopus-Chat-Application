@@ -48,14 +48,11 @@ public class LoginPage extends AppCompatActivity {
     String username;
     String TAG = "com.canopus.tag";
 
-    boolean doCheck = false;
-
+    boolean checkUserExistence = false;
     FirebaseAuth mAuth;
     FirebaseDatabase loginDb;
-    DatabaseReference emailCheckRef, usersRef;
-    FBase fBase;
-
-    ValueEventListener emailCheckRefL, usersRefL;
+    DatabaseReference usersRef;
+    ValueEventListener usersRefL;
 
 
     @Override
@@ -67,7 +64,8 @@ public class LoginPage extends AppCompatActivity {
             @Override
             public void handleOnBackPressed() {
                 if(loginBtn.isEnabled()) {
-                    doCheck = false;
+                    checkUserExistence = false;
+
                     if (usersRefL != null) {
                         usersRef.removeEventListener(usersRefL);
                     }
@@ -109,17 +107,13 @@ public class LoginPage extends AppCompatActivity {
         // Initializing FBDb, FBAuth and FBASE
         mAuth = FirebaseAuth.getInstance();
         loginDb = FirebaseDatabase.getInstance();
-        emailCheckRef = loginDb.getReference("emailcheck");
         usersRef = loginDb.getReference("users");
-
-        fBase = new FBase(getApplicationContext(), emailCheckRef, usersRef);
 
         // When pressed on Login Button
         loginBtn.setOnClickListener(v -> {
             // Hiding keyboard
             hideKeyboard(LoginPage.this);
 
-            doCheck = true;
             loginBtn.setEnabled(false);
             signupLbl.setEnabled(false);
             helpIv.setEnabled(false);
@@ -143,92 +137,103 @@ public class LoginPage extends AppCompatActivity {
                 showLoginPb();
 
                 // Signing in using Auth
-                mAuth.signInWithEmailAndPassword(email, password).addOnCompleteListener(new OnCompleteListener<AuthResult>() {
-                    @Override
-                    public void onComplete(@NonNull Task<AuthResult> task) {
-                        if(task.isSuccessful()){
-                            Log.d(TAG, "Login successful");
+                mAuth.signInWithEmailAndPassword(email, password).addOnCompleteListener(task -> {
+                    if(task.isSuccessful()){
+                        Log.d(TAG, "Login successful");
 
-                            Toast.makeText(getApplicationContext(), "Login successful", Toast.LENGTH_SHORT).show();
+                        email = FirebaseStringCorrection.Encode(email);
 
-                            email = FirebaseStringCorrection.Encode(email);
-                            usersRefL = usersRef.child(email).addValueEventListener(new ValueEventListener() {
-                                @Override
-                                public void onDataChange(@NonNull DataSnapshot snapshot) {
-                                    if(doCheck) {
-                                        doCheck = false;
-                                        if (snapshot.exists()) {
-                                            // fetching username
-                                            Log.d(TAG, "Fetching username");
+                        // fetching User
+                        Log.d(TAG, "Fetching User");
 
-                                            hideLoginPb();
-                                            username = String.valueOf(snapshot.getValue());
-                                            Toast.makeText(getApplicationContext(), "Welcome " + username, Toast.LENGTH_SHORT).show();
+                        checkUserExistence = true;
+                        usersRefL = usersRef.child(email).addValueEventListener(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                                if(checkUserExistence) {
+                                    checkUserExistence = false;
 
-                                            // Heading to MainPage
-                                            Intent MainPage = new Intent(getApplicationContext(), MainPage.class);
-                                            MainPage.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                                            startActivity(MainPage);
-                                            finish();
-                                        }
-                                        else{
-                                            hideLoginPb();
+                                    if (snapshot.exists()) {
+                                        Toast.makeText(getApplicationContext(), "Login successful", Toast.LENGTH_SHORT).show();
 
-                                            Log.d(TAG, "username doesn't exists. Database error.");
+                                        hideLoginPb();
+                                        UserModel userModel = snapshot.getValue(UserModel.class);
+                                        username = userModel.getUsername();
 
-                                            Toast.makeText(getApplicationContext(), "Some error occurred! Invalid profile.", Toast.LENGTH_SHORT).show();
+                                        Toast.makeText(getApplicationContext(), "Welcome " + username, Toast.LENGTH_SHORT).show();
 
-                                            // Signing out
-                                            mAuth.signOut();
 
-                                            // Exiting app
-                                            finish();
-                                        }
+                                        // Heading to MainPage
+                                        Intent MainPage = new Intent(getApplicationContext(), MainPage.class);
+                                        MainPage.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                                        startActivity(MainPage);
+                                        finish();
                                     }
+                                    else {
+                                        hideLoginPb();
+
+                                        Log.d(TAG, "username doesn't exists. Database error.");
+
+                                        Toast.makeText(getApplicationContext(), "Some error occurred! Invalid profile.", Toast.LENGTH_SHORT).show();
+
+                                        // Signing out
+                                        mAuth.signOut();
+
+                                        // Exiting app
+                                        finish();
+                                    }
+
+                                }
+                            }
+
+                            @Override
+                            public void onCancelled(@NonNull DatabaseError error) {
+                                // Detaching listener
+                                if(usersRefL!=null){
+                                    usersRef.removeEventListener(usersRefL);
                                 }
 
-                                @Override
-                                public void onCancelled(@NonNull DatabaseError error) {
-                                    hideLoginPb();
-                                    doCheck = false;
-                                    Log.d(TAG, error.getDetails());
+                                hideLoginPb();
+                                Log.d(TAG, error.getDetails());
 
-                                    Toast.makeText(getApplicationContext(), "Some error occurred while getting your profile. Please login again.", Toast.LENGTH_LONG).show();
-                                    mAuth.signOut();
+                                Toast.makeText(getApplicationContext(), "Some error occurred while getting your profile. Please login again.", Toast.LENGTH_LONG).show();
+                                mAuth.signOut();
 
-                                    // Exiting
-                                    finish();
-                                }
-                            });
+                                // Exiting
+                                finish();
+                            }
+                        });
 
+
+                        // Detaching listener
+                        usersRef.removeEventListener(usersRefL);
+
+                    }
+                    else{
+                        hideLoginPb();
+
+                        Log.d(TAG, "Login not successful, Authentication error: " + String.valueOf(task.getException()));
+                        if(task.getException() != null){
+                            try {
+                                throw task.getException();
+                            }
+                            catch(FirebaseTooManyRequestsException e){
+                                Toast.makeText(getApplicationContext(), "Too many requests from this device. The device is temporarily blocked.", Toast.LENGTH_SHORT).show();
+                            }
+                            catch(FirebaseAuthInvalidUserException e){
+                                Toast.makeText(getApplicationContext(), "Invalid login credentials. No such user exists.", Toast.LENGTH_SHORT).show();
+                            }
+                            catch(FirebaseAuthInvalidCredentialsException e){
+                                Toast.makeText(getApplicationContext(), "Invalid login credentials. Please check your email or password", Toast.LENGTH_SHORT).show();
+                            }
+                            catch (Exception e){
+                                Toast.makeText(getApplicationContext(), "An error occurred. Unable to Login. Please check your network!", Toast.LENGTH_SHORT).show();
+                            }
                         }
                         else{
-                            hideLoginPb();
-                            doCheck = false;
-
-                            Log.d(TAG, "Login not successful, Authentication error: " + String.valueOf(task.getException()));
-                            if(task.getException() != null){
-                                try {
-                                    throw task.getException();
-                                }
-                                catch(FirebaseTooManyRequestsException e){
-                                    Toast.makeText(getApplicationContext(), "Too many requests from this device. The device is temporarily blocked.", Toast.LENGTH_SHORT).show();
-                                }
-                                catch(FirebaseAuthInvalidUserException e){
-                                    Toast.makeText(getApplicationContext(), "Invalid login credentials. No such user exists.", Toast.LENGTH_SHORT).show();
-                                }
-                                catch(FirebaseAuthInvalidCredentialsException e){
-                                    Toast.makeText(getApplicationContext(), "Invalid login credentials. Please check your email or password", Toast.LENGTH_SHORT).show();
-                                }
-                                catch (Exception e){
-                                    Toast.makeText(getApplicationContext(), "An error occurred. Unable to Login. Please check your network!", Toast.LENGTH_SHORT).show();
-                                }
-                            }
-                            else{
-                                Toast.makeText(getApplicationContext(), "Login Failed!", Toast.LENGTH_SHORT).show();
-                            }
-
+                            Toast.makeText(getApplicationContext(), "Login Failed!", Toast.LENGTH_SHORT).show();
                         }
+
                     }
                 });
             }
@@ -251,8 +256,8 @@ public class LoginPage extends AppCompatActivity {
 
         // When pressed on Signup lbl
         signupLbl.setOnClickListener(v -> {
-            doCheck = false;
             hideKeyboard(LoginPage.this);
+            checkUserExistence = false;
 
             // Heading to SignUpPage
             Intent SignUpPage = new Intent(getApplicationContext(), SignUpPage.class);
@@ -263,8 +268,8 @@ public class LoginPage extends AppCompatActivity {
 
         // When pressed on Help
         helpIv.setOnClickListener(v -> {
-            doCheck = false;
             hideKeyboard(LoginPage.this);
+            checkUserExistence = false;
 
             Intent HelpPage = new Intent(getApplicationContext(), com.canopus.chatapp.HelpPage.class);
             HelpPage.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_ACTIVITY_CLEAR_TASK);

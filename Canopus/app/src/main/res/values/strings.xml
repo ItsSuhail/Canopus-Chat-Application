@@ -18,7 +18,8 @@
     <string name="go_back">Go back</string>
     <string name="type_a_message">Type a message</string>
     <string name="send_message">Send message</string>
-    <string name="rules_for_making_account">• Use correct email address.\n• Don\'t use any punctuation mark or any symbol in your username.\n• Use of underscore and alpha-numeric characters is allowed for username.\n• Your account password must have at least 6 characters.</string>
+    <string name="rules_for_making_account">• Use correct email address.\n• Don\'t use any punctuation mark or any symbol in your username.\n• Use of underscore and alpha-numeric characters is allowed for username.\n• Your account password must have at least 6 characters.\n• Your account password must have at least 6 characters.\n• <![CDATA[Do not use the symbols \'|\', \'<\', \'>\' in your messages.]]></string>
     <string name="check_for_update">Check for update</string>
     <string name="logout">Logout</string>
+    <string name="rules"><![CDATA[Rules & Regulations]]></string>
 </resources>

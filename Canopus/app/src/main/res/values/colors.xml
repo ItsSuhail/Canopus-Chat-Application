@@ -7,4 +7,5 @@
     <color name="yellow1">#FFE500</color>
     <color name="border">#FFFFFF</color>
     <color name="red1">#830000</color>
+    <color name="transparent">#00000000</color>
 </resources>

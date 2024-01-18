@@ -21,6 +21,7 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.messaging.FirebaseMessaging;
 
 import java.util.regex.Pattern;
 
@@ -31,18 +32,18 @@ public class MainPage extends AppCompatActivity {
 
     FirebaseAuth mAuth;
     FirebaseDatabase loginDb;
-    DatabaseReference emailCheckRef, usersRef;
-    ValueEventListener usersRefL, emailCheckRefL;
-    FBase fBase;
+    DatabaseReference usersRef;
+    ValueEventListener usersRefL;
 
-    boolean doCheck = true;
-    boolean doCheckUser = true;
+    UserModel userModel;
     String resultUID, resultUsername, cEmail, cUID, cUsername;
 
     String TAG = "com.canopus.tag";
     String NAME = "com.canopus.chatapp.information";
     String starsJoinedStr; // For getting sharedpreference string
     String[] starsJoinedArr, starsJoinedPasswords, starsJoinedNames; // For getting password and name
+
+    boolean checkUserExistence = false;
 
     StarAdapter starAdapter;
 
@@ -55,11 +56,8 @@ public class MainPage extends AppCompatActivity {
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
-                doCheck = false;
-                doCheckUser = false;
-                if(emailCheckRefL!=null){
-                    emailCheckRef.removeEventListener(emailCheckRefL);
-                }
+                checkUserExistence = false;
+
                 if(usersRefL!=null){
                     usersRef.removeEventListener(usersRefL);
                 }
@@ -116,13 +114,9 @@ public class MainPage extends AppCompatActivity {
         // Initializing FBDb and FBAuth and FBASE and FBUser
         mAuth = FirebaseAuth.getInstance();
         loginDb = FirebaseDatabase.getInstance();
-        emailCheckRef = loginDb.getReference("emailcheck");
         usersRef = loginDb.getReference("users");
 
         FirebaseUser cUser = mAuth.getCurrentUser();
-
-        doCheckUser = true;
-        doCheck = true;
 
         if(cUser!=null){
             // Getting email
@@ -135,18 +129,20 @@ public class MainPage extends AppCompatActivity {
             Log.d(TAG, cEmail);
             Log.d(TAG, cUID);
 
-            // Checking if email exists and if yes then the UID matches the result!
-            emailCheckRefL = emailCheckRef.child(cEmail).addValueEventListener(new ValueEventListener() {
+            // Checking if user exists and if yes then the current UID matches the result!
+            checkUserExistence = true;
+            usersRefL = usersRef.child(cEmail).addValueEventListener(new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot snapshot) {
-                    if(doCheck) {
+                    if(checkUserExistence) {
+                        checkUserExistence = false;
+
                         if (snapshot.exists()) {
-                            resultUID = String.valueOf(snapshot.getValue());
+                            userModel = snapshot.getValue(UserModel.class);
+
+                            resultUID = userModel.getUID();
 
                             if (!resultUID.equals(cUID)) {
-                                doCheck = false;
-                                doCheckUser = false;
-
                                 Log.d(TAG, "UID and fetched UID do not match");
                                 Toast.makeText(getApplicationContext(), "Some error occurred! Invalid profile details.", Toast.LENGTH_SHORT).show();
 
@@ -155,53 +151,25 @@ public class MainPage extends AppCompatActivity {
 
                                 // Exiting app
                                 finish();
-                            }
-                            else{
-                                usersRefL = usersRef.child(cEmail).addValueEventListener(new ValueEventListener() {
-                                    @Override
-                                    public void onDataChange(@NonNull DataSnapshot snapshot) {
-                                        if(snapshot.exists()){
-                                            cUsername = String.valueOf(snapshot.getValue());
-                                            Log.d(TAG, "Got username");
-                                            Log.d(TAG, cUsername);
-                                        }
-                                        else{
-                                            doCheck = false;
-                                            doCheckUser = false;
-                                            Log.d(TAG, "username doesn't exists. Database error.");
-
-                                            Toast.makeText(getApplicationContext(), "Some error occurred! Invalid profile.", Toast.LENGTH_SHORT).show();
-
-                                            // Signing out
-                                            mAuth.signOut();
-
-                                            // Exiting app
-                                            finish();
-                                        }
+                            } else {
+                                cUsername = userModel.getUsername();
+                                // Getting FCM token
+                                FirebaseMessaging.getInstance().getToken().addOnCompleteListener(task -> {
+                                    if(task.isSuccessful()){
+                                        String FCMToken = task.getResult();
+                                        userModel.setFCMToken(FCMToken);
+                                        usersRef.child(cEmail).setValue(userModel);
                                     }
-
-                                    @Override
-                                    public void onCancelled(@NonNull DatabaseError error) {
-                                        doCheck = false;
-                                        doCheckUser = false;
-                                        Log.d(TAG, "Error occurred while fetching username: "+error.getDetails());
-
-                                        Toast.makeText(getApplicationContext(), "Some error occurred while getting your profile.", Toast.LENGTH_SHORT).show();
-
-                                        // Signing out
-                                        mAuth.signOut();
-
-                                        // Exiting app
-                                        finish();
+                                    else{
+                                        Log.d(TAG, "Some error occurred while getting FCM token");
+                                        Toast.makeText(MainPage.this, "Some error occurred!", Toast.LENGTH_SHORT).show();
                                     }
                                 });
                             }
 
                         } else {
-                            doCheck = false;
-                            doCheckUser = false;
 
-                            Log.d(TAG, "Email doesn't exist");
+                            Log.d(TAG, "User doesn't exist");
 
                             Toast.makeText(getApplicationContext(), "Profile not found! Please re-login into the app.", Toast.LENGTH_SHORT).show();
 
@@ -216,9 +184,12 @@ public class MainPage extends AppCompatActivity {
 
                 @Override
                 public void onCancelled(@NonNull DatabaseError error) {
-                    doCheck = false;
-                    doCheckUser = false;
                     Log.e(TAG, "Error occurred while fetching UID to check email: "+error.getDetails());
+
+                    // Detaching listener
+                    if(usersRefL!=null){
+                        usersRef.removeEventListener(usersRefL);
+                    }
 
                     Toast.makeText(getApplicationContext(), "Some error occurred while getting your profile.", Toast.LENGTH_SHORT).show();
 
@@ -233,6 +204,24 @@ public class MainPage extends AppCompatActivity {
 
                 }
             });
+
+
+            // Detaching listener
+            usersRef.removeEventListener(usersRefL);
+            Log.d(TAG, "Removed the listener");
+
+        }
+        else{
+            Toast.makeText(getApplicationContext(), "Unable to get your profile. Please login again.", Toast.LENGTH_SHORT).show();
+
+            // Signing out
+            mAuth.signOut();
+
+            // Heading to login page
+            Intent LoginPage = new Intent(getApplicationContext(), LoginPage.class);
+            LoginPage.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(LoginPage);
+            finish();
         }
 
         if(!starsJoinedStr.equals("<NO_STARS>")) {
@@ -256,36 +245,38 @@ public class MainPage extends AppCompatActivity {
         else{
             starsJoinedRv.setVisibility(View.INVISIBLE);
         }
-
+        
         // When pressed on Create star
         createStarIv.setOnClickListener(v -> {
+            checkUserExistence = false;
+
             Intent AddPage = new Intent(getApplicationContext(), AddStarPage.class);
             AddPage.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_ACTIVITY_CLEAR_TASK);
             AddPage.putExtra("com.canopus.app.username", cUsername);
-            doCheck = false;
-            doCheckUser = false;
+            AddPage.putExtra("com.canopus.app.encodedEmail", cEmail);
             startActivity(AddPage);
             finish();
         });
 
         // When pressed on Join star
         joinStarIv.setOnClickListener(v ->{
+            checkUserExistence = false;
+
             Intent JoinStarPage = new Intent(getApplicationContext(), JoinStarPage.class);
             JoinStarPage.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_ACTIVITY_CLEAR_TASK);
             JoinStarPage.putExtra("com.canopus.app.username", cUsername);
-            doCheck = false;
-            doCheckUser = false;
+            JoinStarPage.putExtra("com.canopus.app.encodedEmail", cEmail);
             startActivity(JoinStarPage);
             finish();
         });
 
         // When pressed on Help
         helpIv.setOnClickListener(v -> {
+            checkUserExistence = false;
+
             Intent HelpPage = new Intent(getApplicationContext(), com.canopus.chatapp.HelpPage.class);
             HelpPage.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_ACTIVITY_CLEAR_TASK);
             HelpPage.putExtra("com.canopus.app.parentActivity", "MainPage");
-            doCheck = false;
-            doCheckUser = false;
             startActivity(HelpPage);
             finish();
         });

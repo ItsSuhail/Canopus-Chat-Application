@@ -11,8 +11,8 @@ android {
         applicationId = "com.canopus.chatapp"
         minSdk = 21
         targetSdk = 33
-        versionCode = 3
-        versionName = "3.0"
+        versionCode = 5
+        versionName = "5.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -41,6 +41,8 @@ dependencies {
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.firebase:firebase-database")
     implementation("com.google.firebase:firebase-analytics")
+    implementation("com.google.firebase:firebase-messaging:23.4.0")
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
 
 
     testImplementation("junit:junit:4.13.2")
