@@ -26,4 +26,4 @@ Features I would want to add:
 ![5](https://github.com/ItsSuhail/Canopus-Chat-Application/assets/82229055/d9a37957-3580-4c30-8971-289bb6f17464)
 ![6](https://github.com/ItsSuhail/Canopus-Chat-Application/assets/82229055/b456ab54-2bd7-4097-bb13-46c8ea00d922)
 
-Click [Download Application](https://drive.google.com/file/d/1WLOkmE7Pkl7RdND4YYBp3Xby8pmJGJGD/view?usp=drive_link) to download the Application (For Android)
+Click [Download Application](https://tinyurl.com/starthingy) to download the Application (For Android)
