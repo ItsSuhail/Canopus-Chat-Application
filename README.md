@@ -18,6 +18,13 @@ Features I would want to add:
 - [ ] Invitation System
 - [ ] Personal chatting
 
+## Instructions to build this project
++ Login to Firebase Console
++ Create your own project
++ Add and setup Database, Authorization and Cloud Messaging
++ Go to settings and integrate the Android App with your firebase project
++ Download the config file and place it under Canopus/app folder
+
 ## Screenshots:
 ![1](https://github.com/ItsSuhail/Canopus-Chat-Application/assets/82229055/14afe447-146f-44b5-aa68-e7846c55ca07)
 ![2](https://github.com/ItsSuhail/Canopus-Chat-Application/assets/82229055/45045f39-3ace-4932-8723-28ea8c9b59ad)
